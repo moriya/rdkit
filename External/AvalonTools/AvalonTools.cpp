@@ -248,6 +248,7 @@ unsigned int set2DCoords(ROMol &mol, bool clearConfs) {
   std::vector<int> matchedIndices(mol.getNumAtoms());
   // the toolkit may add chiral Hs without putting them at the end of the list
   //    we need to be able to ignore them:
+  bool submathced=false;
   if (origMolHasHs || mp2->n_atoms > mol.getNumAtoms()) {
     // the toolkit may have rearranged the atoms, we need to do a substructure
     // match to figure out what's what
@@ -259,13 +260,14 @@ unsigned int set2DCoords(ROMol &mol, bool clearConfs) {
     CHECK_INVARIANT(avmol, "could not parse mol block from avalon toolkit");
     TEST_ASSERT(avmol);
     auto match = SubstructMatch(*avmol, mol);
-    CHECK_INVARIANT(
-        !match.empty(),
-        "no substructure match found between avalon mol and input mol");
-    for (const auto &pr : match[0]) {
-      matchedIndices[pr.first] = pr.second;
+    if(!match.empty()){
+      for (const auto &pr : match[0]) {
+        matchedIndices[pr.first] = pr.second;
+      }
+      submathced = true;
     }
-  } else {
+  }
+  if(! submathced){
     // Atoms in the intermediate smiles representation may be ordered
     // differently compared to the original input molecule.
     // Make sure that output coordinates are assigned in the correct order.
